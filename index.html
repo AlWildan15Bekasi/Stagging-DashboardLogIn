@@ -171,9 +171,9 @@
           <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-3">
             <i data-lucide="coins" class="w-6 h-6"></i>
           </div>
-          <p class="text-sm text-slate-500 font-semibold uppercase tracking-wider mb-1">Estimasi Honor Anda</p>
+          <p class="text-sm text-slate-500 font-semibold uppercase tracking-wider mb-1">Estimasi Honor Bulan Ini</p>
           <p class="text-3xl font-extrabold text-blue-900" id="guru-total-honor">Rp 0</p>
-          <p class="text-xs text-slate-400 mt-2">*Dihitung dari total kehadiran riwayat absensi</p>
+          <p class="text-xs text-slate-400 mt-2">*Dihitung dari total kehadiran bulan yang dipilih</p>
         </div>
       </div>
 
@@ -429,7 +429,7 @@
       document.getElementById('welcome-guru-name').innerText = currentUser.nama;
       document.getElementById('guru-ekskul-name').innerText = currentUser.ekskul;
       document.getElementById('guru-total-siswa').innerText = currentUser.siswa.length;
-      document.getElementById('guru-total-honor').innerText = "Rp " + currentUser.totalHonor.toLocaleString('id-ID');
+      // Honor tidak diset di sini lagi, tapi dipindah ke renderTabelAbsen agar menyesuaikan dropdown bulan
 
       // Setup Dropdown Bulan (Default bulan ini)
       const selectBulan = document.getElementById('absen-bulan-select');
@@ -456,6 +456,15 @@
       const tbody = document.getElementById('tabel-absen-body');
       const bulanPilih = document.getElementById('absen-bulan-select').value;
       tbody.innerHTML = '';
+
+      // Hitung honor khusus untuk bulan yang sedang dipilih
+      let honorBulanIni = 0;
+      currentUser.absensi.forEach(a => {
+        if(a.bulan === bulanPilih && a.status === "Hadir") {
+          honorBulanIni += 20000;
+        }
+      });
+      document.getElementById('guru-total-honor').innerText = "Rp " + honorBulanIni.toLocaleString('id-ID');
 
       if (currentUser.siswa.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-500">Belum ada siswa aktif di ekskul ini.</td></tr>`;
@@ -534,10 +543,13 @@
             else currentUser.absensi.push({ bulan: bulanPilih, minggu: item.minggu, siswa: item.siswa, status: item.status });
           });
 
-          // Kalkulasi ulang honor lokal
+          // Kalkulasi ulang honor lokal khusus bulan ini
           let totalHonorBaru = 0;
-          currentUser.absensi.forEach(a => { if(a.status === "Hadir") totalHonorBaru += 20000; });
-          currentUser.totalHonor = totalHonorBaru;
+          currentUser.absensi.forEach(a => { 
+            if(a.bulan === bulanPilih && a.status === "Hadir") {
+              totalHonorBaru += 20000; 
+            }
+          });
           document.getElementById('guru-total-honor').innerText = "Rp " + totalHonorBaru.toLocaleString('id-ID');
 
           hideLoader();
